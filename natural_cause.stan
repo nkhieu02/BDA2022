@@ -1,49 +1,48 @@
 // Pool model
 data {
-   int<lower = 0> N;
-   int<lower = 0> y;
+    int<lower=0> n;
+    array[n] int x;
+    array[n] int y;
 }
 parameters {
-   real<lower=0, upper=1> theta;
+    real<lower=0, upper=1> theta;
 }
 model {
-   theta ~ beta(1,1);
-   y ~ binomial(N, theta);
+    theta ~ beta(1,1);
+    y ~ binomial(x, theta);
 }
+generated quantities {
 
+   array[n] int ypred;
+
+   for (i in 1:n) {
+    ypred[i] = binomial_rng(x[i], theta);
+   }
+}
 //---
 
 // Separated model
 data {
     int<lower = 0> g; 
-    int<lower = 0> N[g];
-    int<lower = 0> y[g];
+    int<lower=0> n;
+    array[g,n] int x;
+    array[g,n] int y;
 }
 parameters {
-    real<lower=0, upper=1> theta[g];
+    array[g] real<lower=0, upper=1> theta;
 }
 model {
-    theta ~ beta(1,1);
-    y ~ binomial(N, theta);
-
+    for (i in 1:g) {
+        theta[i] ~ beta(1,1);
+        y[i] ~ binomial(x[i], theta[i]);
+    }
+}
+generated quantities {
+   array[g,n] int ypred;
+   for (i in 1:g) {
+    for (j in 1:n) {
+        ypred[i, j] = binomial_rng(x[i,j], theta[i]);
+    }
+   }
 }
 
-//---
-
-// Hierarchical model
-data {
-    int<lower = 0> g; 
-    int<lower = 0> N[g];
-    int<lower = 0> y[g];
-}
-parameters {
-    real mu;
-    real<lower = 0> sigma;
-    real<lower=0, upper=1> theta[g];
-}
-model {
-    mu ~ normal(0,1);
-    sigma ~ inv_chi_square(1);
-    theta ~ normal(mu, sigma);
-    y ~ binomial(N, theta);
-}
