@@ -16,22 +16,21 @@ transformed parameters {
   }
 }
 model {
-  mu ~ normal(0, 3);
-  theta ~ normal(0, 2);
-  sigma ~ cauchy(0, 2.5);
+  mu ~ normal(1, 3);
+  theta ~ normal(0, 1);
+  sigma ~ normal(0, 2);
   for (t in 2:T) {
     y[t] ~ normal(mu + theta * epsilon[t - 1] , sigma);
   }
 }
 generated quantities {
-   vector[T + T_exclude ] ypred; // Since not include the first observation
+   vector[T + T_exclude - 1] ypred; // Since not include the first observation
    vector[T+T_exclude - 1] log_lik;
 
    for (t in 1:(T + T_exclude-1)) {
     ypred[t] = normal_rng(mu + theta * epsilon[t] , sigma);
     log_lik[t] = normal_lpdf(y[t] | mu+ theta * epsilon[t], sigma);
    }
-   ypred[T+T_exclude] = normal_rng(mu + theta * epsilon[T+T_exclude] , sigma);
 }
 
 //-----
@@ -63,14 +62,14 @@ transformed parameters {
   }
 }
 model {
-  mu_1 ~ normal(0, 2);
-  mu_2 ~ normal(0, 2);
-  sigma_1 ~ cauchy(0, 2.5);
-  sigma_2 ~ cauchy(0, 2.5);
-  theta_1_1 ~ normal(0, 2);
-  theta_1_2 ~ normal(0, 2);
-  theta_2_1 ~ normal(0, 2);
-  theta_2_2 ~ normal(0, 2);
+  mu_1 ~ normal(1, 3);
+  mu_2 ~ normal(1, 3);
+  sigma_1 ~ normal(0, 2.5);
+  sigma_2 ~ normal(0, 2.5);
+  theta_1_1 ~ normal(0, 1);
+  theta_1_2 ~ normal(0, 1);
+  theta_2_1 ~ normal(0, 1);
+  theta_2_2 ~ normal(0, 1);
 
   for (t in 2:T) {
     y_1[t] ~ normal(mu_1 + theta_1_1 * epsilon_1[t-1] + theta_1_2 * epsilon_2[t-1], sigma_1);
@@ -78,8 +77,8 @@ model {
   }
 }
 generated quantities {
-  vector[T + T_exclude] ypred_1;
-  vector[T + T_exclude] ypred_2;
+  vector[T + T_exclude - 1] ypred_1;
+  vector[T + T_exclude - 1] ypred_2;
   vector[T + T_exclude - 1] log_lik;
 
   for (t in 1:(T + T_exclude -1)) {
@@ -87,7 +86,4 @@ generated quantities {
     ypred_2[t] = normal_rng(mu_2 + theta_2_1 * epsilon_1[t] + theta_2_2 * epsilon_2[t], sigma_2);
     log_lik[t] = normal_lpdf(y_1[t] | mu_1 + theta_1_1 * epsilon_1[t] + theta_1_2 * epsilon_2[t], sigma_1);
   }
-  ypred_1[T + T_exclude] = normal_rng(mu_1 + theta_1_1 * epsilon_1[T+T_exclude] + theta_1_2 * epsilon_2[T+T_exclude], sigma_1);
-  ypred_2[T + T_exclude] = normal_rng(mu_2 + theta_2_1 * epsilon_1[T+T_exclude] + theta_2_2 * epsilon_2[T+T_exclude], sigma_2);
-
 }
